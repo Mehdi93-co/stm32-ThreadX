@@ -52,12 +52,6 @@ static uint8_t   thread_Btn_stack[THREAD_STACK_SIZE];
 static TX_THREAD thread_Btn_ptr;
 TX_SEMAPHORE     g_user_btn_Semaphore;
 
-static uint8_t   thread_Uart1_stack[THREAD_STACK_SIZE];
-static TX_THREAD thread_Uart1_ptr;
-TX_SEMAPHORE     g_uart1_Semaphore;
-
-TX_MUTEX g_uart1_Mutex;
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -66,14 +60,14 @@ TX_MUTEX g_uart1_Mutex;
 /* USER CODE END PFP */
 
 /**
-  * @brief  Application ThreadX Initialization.
-  * @param memory_ptr: memory pointer
-  * @retval int
-  */
+ * @brief  Application ThreadX Initialization.
+ * @param memory_ptr: memory pointer
+ * @retval int
+ */
 UINT App_ThreadX_Init(VOID *memory_ptr)
 {
-  UINT ret = TX_SUCCESS;
-  TX_BYTE_POOL *byte_pool = (TX_BYTE_POOL*)memory_ptr;
+  UINT          ret       = TX_SUCCESS;
+  TX_BYTE_POOL *byte_pool = (TX_BYTE_POOL *)memory_ptr;
 
   /* USER CODE BEGIN App_ThreadX_MEM_POOL */
   //(void)byte_pool;
@@ -82,39 +76,12 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
   /* USER CODE BEGIN App_ThreadX_Init */
   /* Trace Buffer ---------------------------------------------------------*/
   tx_trace_enable(&trace_buffer, TRACEX_BUFFER_SIZE, 30);
-  /* Blinking LED ---------------------------------------------------------*/
-#if (LD1_BLINK_MODE_DELAY || LD1_BLINK_MODE_TICK)
-#ifndef LD1_SLEEP_MODE
-  tx_semaphore_create(&g_user_ld1_Semaphore, "User LD1 Semaphore", 0);
-#endif
 
-  ret = tx_thread_create(&thread_Led_ptr, "Thread LED", thread_Led_entry, 0, thread_Led_stack,
-                         THREAD_STACK_SIZE, 15, 15, TX_NO_TIME_SLICE, TX_AUTO_START);
-#endif
-  if (ret != TX_SUCCESS)
-  {
-    Error_Handler();
-  }
-
-/* Button toggeln LED----------------------------------------------------*/
-#if (LD1_BTN_MODE)
+  /* Button toggeln LED----------------------------------------------------*/
   tx_semaphore_create(&g_user_btn_Semaphore, "User Button Semaphore", 0);
 
   ret = tx_thread_create(&thread_Btn_ptr, "Thread BTN", thread_Btn_entry, 0, thread_Btn_stack,
                          THREAD_STACK_SIZE, 15, 15, TX_NO_TIME_SLICE, TX_AUTO_START);
-#endif
-  if (ret != TX_SUCCESS)
-  {
-    Error_Handler();
-  }
-
-  /* UART1 semaphore -----------------------------------------------------*/
-#if (UART_MODE)
-  tx_semaphore_create(&g_uart1_Semaphore, "UART1 Semaphore", 0);
-  ret =
-      tx_thread_create(&thread_Uart1_ptr, "Thread UART1", thread_Uart1_entry, 0, thread_Uart1_stack,
-                       THREAD_STACK_SIZE, 15, 15, TX_NO_TIME_SLICE, TX_AUTO_START);
-#endif
   if (ret != TX_SUCCESS)
   {
     Error_Handler();
@@ -126,16 +93,14 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
 }
 
 /**
-  * @brief  MX_ThreadX_Init
-  * @param  None
-  * @retval None
-  */
+ * @brief  MX_ThreadX_Init
+ * @param  None
+ * @retval None
+ */
 void MX_ThreadX_Init(void)
 {
   /* USER CODE BEGIN  Before_Kernel_Start */
-#if (UART_MODE)
-  HAL_TIM_Base_Start_IT(&htim10);
-#endif
+
   /* USER CODE END  Before_Kernel_Start */
 
   tx_kernel_enter();
