@@ -16,6 +16,7 @@
 #include "main.h"
 #include "app.h"
 #include "stm32f746xx.h"
+#include "stm32f7xx_hal_uart.h"
 #include "tx_api.h"
 #include <stdint.h>
 
@@ -73,10 +74,13 @@ VOID thread_Uart1_entry(ULONG thread_input)
 void App_Blink_Process(void)
 {
   HAL_GPIO_TogglePin(GPIOI, LED_LD1_Pin);
-#if defined(LD1_SLEEP_MODE)
+#if (LD1_SLEEP_MODE)
   tx_thread_sleep(LED_BLINK_DELAY);
-#else
+#endif
+#if (SEMAPHORE_MODE)
   tx_semaphore_get(&g_user_ld1_Semaphore, TX_WAIT_FOREVER);
+#else
+  tx_mutex_get(&g_user_ld1_Mutex, TX_WAIT_FOREVER);
 #endif
 }
 
@@ -96,7 +100,16 @@ void App_BTN_Process(void)
 void App_UART1_Process(void)
 {
   // HAL_UART_Transmit(&huart1, tx_data, sizeof(tx_data) - 1, HAL_MAX_DELAY);
-  HAL_UART_Transmit(&huart1, tx_data_large, sizeof(tx_data_large) - 1, HAL_MAX_DELAY);
+  // HAL_UART_Transmit(&huart1, tx_data_large, sizeof(tx_data_large) - 1, HAL_MAX_DELAY);
+  HAL_UART_Transmit_IT(&huart1, tx_data_large, sizeof(tx_data_large) - 1);
+}
+
+void App_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+  if (huart->Instance == USART1)
+  {
+    tx_mutex_put(&g_uart1_Mutex);
+  }
 }
 
 /**
@@ -113,7 +126,7 @@ void App_UART1_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     {
       s_counter_interrupts = 0;
 #if (SEMAPHORE_MODE)
-      tx_semaphore_put(&g_uart1_Semaphore);
+      // tx_semaphore_put(&g_uart1_Semaphore);
       //}
       tx_semaphore_put(&g_user_ld1_Semaphore);
 #else

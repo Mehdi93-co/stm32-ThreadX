@@ -52,9 +52,9 @@ typedef enum
 } BTN_State_t;
 
 /* Compile Mode for Exercise */
-
+#define SEMAPHORE_MODE       FALSE
 #define LD1_BLINK_MODE_DELAY FALSE
-#define LD1_BLINK_MODE_TICK  TRUE
+#define LD1_BLINK_MODE_TICK  FALSE
 #define LD1_BTN_MODE         FALSE
 #define UART_MODE            TRUE
 // define LD1_SLEEP_MODE       FALSE

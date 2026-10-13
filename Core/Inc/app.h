@@ -34,6 +34,7 @@ extern TX_SEMAPHORE         g_user_btn_Semaphore;
 extern TX_SEMAPHORE         g_uart1_Semaphore;
 extern TX_SEMAPHORE         g_user_ld1_Semaphore;
 extern TX_MUTEX             g_uart1_Mutex;
+extern TX_MUTEX             g_user_ld1_Mutex;
 extern volatile BTN_State_t g_user_btn_State;
 
 VOID thread_Led_entry(ULONG thread_input);
@@ -49,6 +50,7 @@ void App_UART1_Process(void);
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
 void App_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
 void App_UART1_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
+void App_UART_TxCpltCallback(UART_HandleTypeDef *huart);
 #ifdef __cplusplus
 }
 #endif /* defined(__cplusplus) */
