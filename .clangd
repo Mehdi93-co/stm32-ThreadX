@@ -1,0 +1,8 @@
+CompileFlags:
+  CompilationDatabase: build/Debug
+  Add:
+    - --target=arm-none-eabi
+    - -isystem
+    - >-
+      C:/Users/Mehdi
+      elkorch/AppData/Local/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/arm-none-eabi/include

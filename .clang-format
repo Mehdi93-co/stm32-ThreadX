@@ -1,0 +1,31 @@
+BasedOnStyle: LLVM
+IndentWidth: 2
+ColumnLimit: 100
+UseTab: Never
+BreakBeforeBraces: Allman
+SortIncludes: Never
+
+# Alignment
+AlignConsecutiveAssignments: Consecutive
+AlignConsecutiveMacros: Consecutive
+AlignConsecutiveDeclarations: Consecutive
+AlignConsecutiveBitFields: Consecutive
+AlignEscapedNewlines: Left
+AlignTrailingComments: true
+
+# Kurze Anweisungen nie in eine Zeile
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Never
+InsertBraces: true
+
+# Einrueckung / Leerzeichen
+IndentExternBlock: NoIndent
+IndentCaseLabels: true
+PointerAlignment: Right
+
+# Leerzeilen
+MaxEmptyLinesToKeep: 1
+KeepEmptyLinesAtTheStartOfBlocks: false
+InsertNewlineAtEOF: true
