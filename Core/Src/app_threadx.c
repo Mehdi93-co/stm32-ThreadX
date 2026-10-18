@@ -78,6 +78,14 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
   /* Trace Buffer ---------------------------------------------------------*/
   tx_trace_enable(&trace_buffer, TRACEX_BUFFER_SIZE, 30);
 
+  /* LED1 semaphore -----------------------------------------------------*/
+  tx_semaphore_create(&g_user_ld1_Semaphore, "UART1 Semaphore", 0);
+  ret = tx_thread_create(&thread_Led_ptr, "Thread LD1", thread_Led_entry, 0, thread_Led_stack,
+                         THREAD_STACK_SIZE, 15, 15, TX_NO_TIME_SLICE, TX_AUTO_START);
+  if (ret != TX_SUCCESS)
+  {
+    Error_Handler();
+  }
   /* UART1 semaphore -----------------------------------------------------*/
   tx_semaphore_create(&g_uart1_Semaphore, "UART1 Semaphore", 0);
   ret =

@@ -28,6 +28,18 @@ static const uint8_t tx_data_large[] = "This is a 40 long Sting just to callaps 
  * @brief  Application code for UART1
  * @retval None
  */
+VOID thread_Led_entry(ULONG thread_input)
+{
+  while (TRUE)
+  {
+    tx_semaphore_get(&g_user_ld1_Semaphore, TX_WAIT_FOREVER);
+    App_Blink_Process();
+  }
+}
+/**
+ * @brief  Application code for UART1
+ * @retval None
+ */
 VOID thread_Uart1_entry(ULONG thread_input)
 {
   while (TRUE)
@@ -41,7 +53,7 @@ VOID thread_Uart1_entry(ULONG thread_input)
  * @brief  Application code for LD1 and BTN
  * @retval None
  */
-void App_BTN_Process(void)
+void App_Blink_Process(void)
 {
   HAL_GPIO_TogglePin(LED_LD1_GPIO_Port, LED_LD1_Pin);
 }
@@ -68,12 +80,12 @@ void App_UART1_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   if (htim->Instance == TIM10)
   {
+    tx_semaphore_put(&g_user_ld1_Semaphore);
     s_counter_interrupts++;
     if (s_counter_interrupts >= UART1_TX_PERIODIC_INTERRUPT_COUNT)
     {
       s_counter_interrupts = 0;
       tx_semaphore_put(&g_uart1_Semaphore);
     }
-    // tx_semaphore_put(&g_user_ld1_Semaphore);
   }
 }

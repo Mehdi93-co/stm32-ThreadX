@@ -52,7 +52,7 @@ typedef enum
 } BTN_State_t;
 
 /* Compile Mode for Exercise */
-#define TX_LARGE_BUFFER TRUE
+#define TX_LARGE_BUFFER FALSE
 /* Exported functions -------------------------------------------------------*/
 
 #ifdef __cplusplus
