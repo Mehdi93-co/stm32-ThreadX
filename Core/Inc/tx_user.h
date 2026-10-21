@@ -210,7 +210,7 @@
 
 /* Define the clock source for trace event entry time stamp. */
 
-/*#define TX_TRACE_TIME_SOURCE  *((ULONG *) 0xE0001004)*/
+#define TX_TRACE_TIME_SOURCE  *((ULONG *) 0x40000024)
 
 /* Define the clock source for trace mask. */
 

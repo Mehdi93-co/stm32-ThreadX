@@ -26,6 +26,7 @@
 #include "defines.h"
 #include "app.h"
 #include "stm32f746xx.h"
+#include "stm32f7xx_hal_tim.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -52,6 +53,8 @@ TX_SEMAPHORE     g_user_ld1_Semaphore;
 static uint8_t   thread_Uart1_stack[THREAD_STACK_SIZE];
 static TX_THREAD thread_Uart1_ptr;
 TX_SEMAPHORE     g_uart1_Semaphore;
+
+extern TIM_HandleTypeDef htim2;
 
 /* USER CODE END PV */
 
@@ -114,7 +117,7 @@ void MX_ThreadX_Init(void)
   DWT->LAR    = 0xC5ACCE55;                       /* DWT entsperren (Cortex-M7)  */
   DWT->CYCCNT = 0;                                /* Zähler auf 0                */
   DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;            /* Zykluszähler starten        */
-
+  HAL_TIM_Base_Start(&htim2);
   HAL_TIM_Base_Start_IT(&htim10);
   /* USER CODE END  Before_Kernel_Start */
 
