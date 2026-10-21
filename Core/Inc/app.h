@@ -15,13 +15,13 @@
 #ifndef __APP_H
 #define __APP_H
 
-#include "tx_api.h"
 #if defined(__cplusplus)
 extern "C"
 {
 #endif /* defined(__cplusplus) */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
+#include "tx_api.h"
 #include "main.h"
 #include "app_threadx.h"
 #include "defines.h"
@@ -33,6 +33,20 @@ extern UART_HandleTypeDef huart1;
 extern TX_SEMAPHORE       g_uart1_Semaphore;
 extern TX_SEMAPHORE       g_user_ld1_Semaphore;
 
+/* Threads Priamption and Priority--------------------------------------------*/
+typedef enum
+{
+  UART_THREAD_PRIORITY   = 15,
+  UART_THREAD_PRIAMPTION = 15
+} UART_THREAD_PRIO_t;
+
+typedef enum
+{
+  LED_THREAD_PRIORITY   = 15,
+  LED_THREAD_PRIAMPTION = 15
+} LED_THREAD_PRIO_t;
+
+/* Threads entry function ----- ----------------------------------------------*/
 VOID thread_Led_entry(ULONG thread_input);
 VOID thread_Uart1_entry(ULONG thread_input);
 
