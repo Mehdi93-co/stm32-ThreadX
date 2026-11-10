@@ -46,14 +46,10 @@
 /* USER CODE BEGIN PV */
 uint8_t trace_buffer[TRACEX_BUFFER_SIZE];
 
-static uint8_t   thread_Led_stack[THREAD_STACK_SIZE];
-static TX_THREAD thread_Led_ptr;
-TX_SEMAPHORE     g_user_ld1_Semaphore;
-
-static uint8_t   thread_Uart1_stack[THREAD_STACK_SIZE];
-static TX_THREAD thread_Uart1_ptr;
-TX_SEMAPHORE     g_uart1_Semaphore;
-TX_SEMAPHORE     g_uart1_done_Semaphore;
+static uint8_t   thread_speedy_Uart1_stack[THREAD_STACK_SIZE];
+static uint8_t   thread_slow_Uart1_stack[THREAD_STACK_SIZE];
+static TX_THREAD thread_speedy_Uart1_ptr;
+static TX_THREAD thread_slow_Uart1_ptr;
 
 extern TIM_HandleTypeDef htim2;
 
@@ -82,21 +78,20 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
   /* Trace Buffer ---------------------------------------------------------*/
   tx_trace_enable(&trace_buffer, TRACEX_BUFFER_SIZE, 30);
 
-  /* LED1 semaphore -----------------------------------------------------*/
-  tx_semaphore_create(&g_user_ld1_Semaphore, "LD1 Semaphore", 0);
-  ret = tx_thread_create(&thread_Led_ptr, "Thread LD1", thread_Led_entry, 0, thread_Led_stack,
-                         THREAD_STACK_SIZE, LED_THREAD_PRIORITY, LED_THREAD_PRIAMPTION,
-                         TX_NO_TIME_SLICE, TX_AUTO_START);
+  /* Thread_speedy -----------------------------------------------------*/
+  ret =
+      tx_thread_create(&thread_speedy_Uart1_ptr, "Thread SPEEDY UART1", thread_speedy_Uart1_entry,
+                       0, thread_speedy_Uart1_stack, THREAD_STACK_SIZE, UART_THREAD_SPEEDY_PRIORITY,
+                       UART_THREAD_SPEEDY_PRIAMPTION, TX_NO_TIME_SLICE, TX_AUTO_START);
   if (ret != TX_SUCCESS)
   {
     Error_Handler();
   }
-  /* UART1 semaphore -----------------------------------------------------*/
-  tx_semaphore_create(&g_uart1_Semaphore, "UART1 Semaphore", 0);
-  tx_semaphore_create(&g_uart1_done_Semaphore, "UART1 Done Semaphore", 0);
-  ret = tx_thread_create(&thread_Uart1_ptr, "Thread UART1", thread_Uart1_entry, 0,
-                         thread_Uart1_stack, THREAD_STACK_SIZE, UART_THREAD_PRIORITY,
-                         UART_THREAD_PRIAMPTION, TX_NO_TIME_SLICE, TX_AUTO_START);
+
+  /* Thread_slow -----------------------------------------------------*/
+  ret = tx_thread_create(&thread_slow_Uart1_ptr, "Thread SLOW UART1", thread_slow_Uart1_entry, 0,
+                         thread_slow_Uart1_stack, THREAD_STACK_SIZE, UART_THREAD_SLOW_PRIORITY,
+                         UART_THREAD_SLOW_PRIAMPTION, TX_NO_TIME_SLICE, TX_AUTO_START);
   if (ret != TX_SUCCESS)
   {
     Error_Handler();
@@ -120,7 +115,6 @@ void MX_ThreadX_Init(void)
   DWT->CYCCNT = 0;                                /* Zähler auf 0                */
   DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;            /* Zykluszähler starten        */
   HAL_TIM_Base_Start(&htim2);
-  HAL_TIM_Base_Start_IT(&htim10);
   /* USER CODE END  Before_Kernel_Start */
 
   tx_kernel_enter();

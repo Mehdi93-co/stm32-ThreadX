@@ -1102,8 +1102,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   App_TIM_PeriodElapsedCallback(htim);
 #endif
 
-  App_UART1_PeriodElapsedCallback(htim);
-
   /* USER CODE END Callback 0 */
   if (htim->Instance == TIM6)
   {

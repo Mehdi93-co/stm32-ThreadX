@@ -30,33 +30,29 @@ extern "C"
 extern TIM_HandleTypeDef  htim7;
 extern TIM_HandleTypeDef  htim10;
 extern UART_HandleTypeDef huart1;
-extern TX_SEMAPHORE       g_uart1_Semaphore;
-extern TX_SEMAPHORE       g_uart1_done_Semaphore;
-extern TX_SEMAPHORE       g_user_ld1_Semaphore;
 
 /* Threads Priamption and Priority--------------------------------------------*/
 typedef enum
 {
-  UART_THREAD_PRIORITY   = 15,
-  UART_THREAD_PRIAMPTION = 15
-} UART_THREAD_PRIO_t;
+  UART_THREAD_SPEEDY_PRIORITY   = 5,
+  UART_THREAD_SPEEDY_PRIAMPTION = 5
+} UART_THREAD_SPEEDY_PRIO_t;
 
 typedef enum
 {
-  LED_THREAD_PRIORITY   = 15,
-  LED_THREAD_PRIAMPTION = 15
-} LED_THREAD_PRIO_t;
+  UART_THREAD_SLOW_PRIORITY   = 15,
+  UART_THREAD_SLOW_PRIAMPTION = 15
+} UART_THREAD_SLOW_PRIO_t;
 
 /* Threads entry function ----- ----------------------------------------------*/
-VOID thread_Led_entry(ULONG thread_input);
-VOID thread_Uart1_entry(ULONG thread_input);
+VOID thread_speedy_Uart1_entry(ULONG thread_input);
+VOID thread_slow_Uart1_entry(ULONG thread_input);
 
 /* Exported functions ------------------------------------------------------- */
-void App_Blink_Process(void);
-void App_UART1_Process(void);
+void App_UART1_speedy_Process(void);
+void App_UART1_slow_Process(void);
 
 /* Callback function for EXTI interrupts ------------------------------------ */
-void App_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
 void App_UART1_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
 void App_UART1_TransmitCpltCallback(UART_HandleTypeDef *huart);
 #ifdef __cplusplus
