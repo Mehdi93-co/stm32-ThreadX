@@ -31,6 +31,7 @@ extern TIM_HandleTypeDef  htim7;
 extern TIM_HandleTypeDef  htim10;
 extern UART_HandleTypeDef huart1;
 extern TX_SEMAPHORE       g_uart1_Semaphore;
+extern TX_SEMAPHORE       g_uart1_done_Semaphore;
 extern TX_SEMAPHORE       g_user_ld1_Semaphore;
 
 /* Threads Priamption and Priority--------------------------------------------*/
@@ -57,6 +58,7 @@ void App_UART1_Process(void);
 /* Callback function for EXTI interrupts ------------------------------------ */
 void App_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
 void App_UART1_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
+void App_UART1_TransmitCpltCallback(UART_HandleTypeDef *huart);
 #ifdef __cplusplus
 }
 #endif /* defined(__cplusplus) */

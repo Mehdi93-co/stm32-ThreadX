@@ -16,14 +16,19 @@
 #include "main.h"
 #include "app.h"
 #include "stm32f746xx.h"
+#include "stm32f7xx_hal_def.h"
+#include "stm32f7xx_hal_uart.h"
 #include "tx_api.h"
 #include <stdint.h>
 
-static uint8_t s_counter_interrupts = 0;
+static uint8_t  s_counter_interrupts = 0;
+static uint32_t s_tx_semaphore_count = 0;
 
-static const uint8_t tx_data[]       = "Hello from UART1\r\n";
-static const uint8_t tx_data_large[] = "This is a 40 long Sting just to callaps the UART\r\n";
-
+#if (TX_LARGE_BUFFER)
+static const uint8_t tx_data_large[] = "This is a long String sending via UART with interrupts\r\n";
+#else
+static const uint8_t tx_data[] = "Hello from UART1\r\n";
+#endif
 /**
  * @brief  Application code for UART1
  * @retval None
@@ -64,13 +69,31 @@ void App_Blink_Process(void)
  */
 void App_UART1_Process(void)
 {
+  HAL_StatusTypeDef uart1_state = HAL_OK;
 #if (TX_LARGE_BUFFER)
-  HAL_UART_Transmit(&huart1, tx_data_large, sizeof(tx_data_large) - 1, HAL_MAX_DELAY);
+  uart1_state = HAL_UART_Transmit_IT(&huart1, tx_data_large, sizeof(tx_data_large) - 1);
 #else
-  HAL_UART_Transmit(&huart1, tx_data, sizeof(tx_data) - 1, HAL_MAX_DELAY);
+  uart1_state = HAL_UART_Transmit_IT(&huart1, tx_data, sizeof(tx_data) - 1);
 #endif
+  if (uart1_state == HAL_BUSY)
+  {
+    /* UART1 is busy, handle the error */
+  }
+  else if (uart1_state != HAL_OK)
+  {
+    /* An error occurred during the transmission, handle the error */
+    Error_Handler();
+  }
+  tx_semaphore_get(&g_uart1_done_Semaphore, TX_WAIT_FOREVER);
 }
 
+void App_UART1_TransmitCpltCallback(UART_HandleTypeDef *huart)
+{
+  if (huart->Instance == USART1)
+  {
+    tx_semaphore_put(&g_uart1_done_Semaphore);
+  }
+}
 /**
  * @brief  Callback function for EXTI interrupts
  * @param  htim: Specifies the TIM handle

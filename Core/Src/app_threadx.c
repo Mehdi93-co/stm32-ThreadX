@@ -53,6 +53,7 @@ TX_SEMAPHORE     g_user_ld1_Semaphore;
 static uint8_t   thread_Uart1_stack[THREAD_STACK_SIZE];
 static TX_THREAD thread_Uart1_ptr;
 TX_SEMAPHORE     g_uart1_Semaphore;
+TX_SEMAPHORE     g_uart1_done_Semaphore;
 
 extern TIM_HandleTypeDef htim2;
 
@@ -92,6 +93,7 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
   }
   /* UART1 semaphore -----------------------------------------------------*/
   tx_semaphore_create(&g_uart1_Semaphore, "UART1 Semaphore", 0);
+  tx_semaphore_create(&g_uart1_done_Semaphore, "UART1 Done Semaphore", 0);
   ret = tx_thread_create(&thread_Uart1_ptr, "Thread UART1", thread_Uart1_entry, 0,
                          thread_Uart1_stack, THREAD_STACK_SIZE, UART_THREAD_PRIORITY,
                          UART_THREAD_PRIAMPTION, TX_NO_TIME_SLICE, TX_AUTO_START);
