@@ -53,10 +53,12 @@ static TX_THREAD thread_speedy_Uart1_ptr;
 static TX_THREAD thread_slow_Uart1_ptr;
 static TX_THREAD thread_Uart1_ptr;
 
-TX_MUTEX     g_message_mutex;
+static thread_data_t g_thread_queue_data[UART_QUEUE_DEPTH];
+
 TX_MUTEX     g_sleep_mutex;
 TX_SEMAPHORE g_uart1_done_Semaphore;
-TX_SEMAPHORE g_uart1_send_Semaphore;
+
+TX_QUEUE g_thread_queue;
 
 extern TIM_HandleTypeDef htim2;
 
@@ -91,7 +93,10 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
   {
     Error_Handler();
   }
-  ret = tx_semaphore_create(&g_uart1_send_Semaphore, "UART1 Send Semaphore", 0);
+
+  /* Queue ------------------------------------------------------------*/
+  ret = tx_queue_create(&g_thread_queue, "Thread Queue", UART_QUEUE_DEPTH, g_thread_queue_data,
+                        sizeof(g_thread_queue_data));
   if (ret != TX_SUCCESS)
   {
     Error_Handler();
@@ -99,11 +104,6 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
 
   /* Mutex ---------------------------------------------------------------- */
   ret = tx_mutex_create(&g_sleep_mutex, "Sleep Mutex", TX_NO_INHERIT);
-  if (ret != TX_SUCCESS)
-  {
-    Error_Handler();
-  }
-  ret = tx_mutex_create(&g_message_mutex, "Message Mutex", TX_NO_INHERIT);
   if (ret != TX_SUCCESS)
   {
     Error_Handler();

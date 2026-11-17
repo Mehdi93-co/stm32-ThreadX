@@ -25,17 +25,13 @@
 static uint32_t s_counter_speedy_ticks = 0;
 static uint32_t s_counter_slow_ticks   = 0;
 
-static uint8_t tx_ticks_speedy[50];
-static uint8_t tx_ticks_slow[50];
-
-char g_thread_message[100] = {0};
-
 /**
  * @brief  Application code for UART1
  * @retval None
  */
 VOID thread_speedy_Uart1_entry(ULONG thread_input)
 {
+  static thread_data_t s_thread_data;
   while (TRUE)
   {
     s_counter_speedy_ticks = tx_time_get();
@@ -51,15 +47,9 @@ VOID thread_speedy_Uart1_entry(ULONG thread_input)
       tx_thread_sleep(3);
       tx_mutex_put(&g_sleep_mutex);
     }
-
-    if (tx_mutex_get(&g_message_mutex, TX_WAIT_FOREVER) == TX_SUCCESS)
-    {
-      snprintf((char *)g_thread_message, sizeof(g_thread_message), "Thread [SPEEDY]: %lu ticks\r\n",
-               (unsigned long)(tx_time_get() - s_counter_speedy_ticks));
-      tx_mutex_put(&g_message_mutex);
-    }
-
-    tx_semaphore_put(&g_uart1_send_Semaphore);
+    s_thread_data.thread_id = THREAD_ID_SPEEDY;
+    s_thread_data.ticks     = tx_time_get() - s_counter_speedy_ticks;
+    tx_queue_send(&g_thread_queue, &s_thread_data, TX_WAIT_FOREVER);
   }
 }
 
@@ -69,6 +59,7 @@ VOID thread_speedy_Uart1_entry(ULONG thread_input)
  */
 VOID thread_slow_Uart1_entry(ULONG thread_input)
 {
+  static thread_data_t s_thread_data;
   while (TRUE)
   {
     s_counter_slow_ticks = tx_time_get();
@@ -85,13 +76,9 @@ VOID thread_slow_Uart1_entry(ULONG thread_input)
     }
     tx_thread_sleep(9);
 
-    if (tx_mutex_get(&g_message_mutex, TX_WAIT_FOREVER) == TX_SUCCESS)
-    {
-      snprintf((char *)g_thread_message, sizeof(g_thread_message), "Thread [SLOW]: %lu ticks\r\n",
-               (unsigned long)(tx_time_get() - s_counter_slow_ticks));
-      tx_mutex_put(&g_message_mutex);
-    }
-    tx_semaphore_put(&g_uart1_send_Semaphore);
+    s_thread_data.thread_id = THREAD_ID_SLOW;
+    s_thread_data.ticks     = tx_time_get() - s_counter_slow_ticks;
+    tx_queue_send(&g_thread_queue, &s_thread_data, TX_WAIT_FOREVER);
   }
 }
 
@@ -101,14 +88,25 @@ VOID thread_slow_Uart1_entry(ULONG thread_input)
  */
 VOID thread_Uart1_entry(ULONG thread_input)
 {
-  static uint8_t s_uart1_message[100] = {0};
+  static char s_uart1_message[100];
   while (TRUE)
   {
-    tx_semaphore_get(&g_uart1_send_Semaphore, TX_WAIT_FOREVER);
-    if (tx_mutex_get(&g_message_mutex, TX_WAIT_FOREVER) == TX_SUCCESS)
+    static thread_data_t s_thread_data;
+    tx_queue_receive(&g_thread_queue, &s_thread_data, TX_WAIT_FOREVER);
+    switch (s_thread_data.thread_id)
     {
-      strcpy((char *)s_uart1_message, (char *)g_thread_message);
-      tx_mutex_put(&g_message_mutex);
+      case THREAD_ID_SPEEDY:
+        snprintf(s_uart1_message, sizeof(s_uart1_message), "Thread SPEEDY[ Ticks: %lu]\r\n",
+                 (unsigned long)s_thread_data.ticks);
+        break;
+      case THREAD_ID_SLOW:
+        snprintf(s_uart1_message, sizeof(s_uart1_message), "Thread SLOW[ Ticks: %lu]\r\n",
+                 (unsigned long)s_thread_data.ticks);
+        break;
+      default:
+        snprintf(s_uart1_message, sizeof(s_uart1_message), "Unknown Thread ID[ %lu Ticks: %lu]\r\n",
+                 (unsigned long)s_thread_data.thread_id, (unsigned long)s_thread_data.ticks);
+        break;
     }
     App_UART1_Transmit((char *)s_uart1_message, strlen((char *)s_uart1_message));
   }

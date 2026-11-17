@@ -32,11 +32,9 @@ extern TIM_HandleTypeDef  htim10;
 extern UART_HandleTypeDef huart1;
 
 extern TX_SEMAPHORE g_uart1_done_Semaphore;
-extern TX_SEMAPHORE g_uart1_send_Semaphore;
 extern TX_MUTEX     g_message_mutex;
 extern TX_MUTEX     g_sleep_mutex;
-
-extern char g_thread_message[100];
+extern TX_QUEUE     g_thread_queue;
 
 /* Threads Priamption and Priority--------------------------------------------*/
 typedef enum
@@ -53,9 +51,24 @@ typedef enum
 
 typedef enum
 {
-  UART_THREAD_PRIORITY   = 3,
-  UART_THREAD_PRIAMPTION = 3
+  UART_THREAD_PRIORITY   = 16,
+  UART_THREAD_PRIAMPTION = 16
 } UART_THREAD_PRIO_t;
+
+typedef enum
+{
+  THREAD_ID_SPEEDY = 0,
+  THREAD_ID_SLOW   = 1,
+} THREAD_ID_t;
+
+typedef struct
+{
+  uint32_t thread_id;
+  uint32_t ticks;
+} thread_data_t;
+
+#define THREAD_DATA_SIZE (sizeof(thread_data_t) / sizeof(ULONG))
+#define UART_QUEUE_DEPTH 5
 
 /* Threads entry function ----- ----------------------------------------------*/
 VOID thread_speedy_Uart1_entry(ULONG thread_input);
