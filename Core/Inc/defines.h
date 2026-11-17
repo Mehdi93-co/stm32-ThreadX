@@ -41,7 +41,7 @@ extern "C"
 
 /* Thread Define -------------------------------------------------------------*/
 #define THREAD_STACK_SIZE  1024
-#define TRACEX_BUFFER_SIZE (32 * 1024) /* 32 KB TraceX buffer size */
+#define TRACEX_BUFFER_SIZE (64 * 1024) /* 64 KB TraceX buffer size */
 
 /* Exported types ------------------------------------------------------------*/
 /* USER BUTTON State */

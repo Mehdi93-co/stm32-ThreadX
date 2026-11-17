@@ -51,6 +51,9 @@ static uint8_t   thread_slow_Uart1_stack[THREAD_STACK_SIZE];
 static TX_THREAD thread_speedy_Uart1_ptr;
 static TX_THREAD thread_slow_Uart1_ptr;
 
+TX_MUTEX     g_uart1_mutex;
+TX_SEMAPHORE g_uart1_done_Semaphore;
+
 extern TIM_HandleTypeDef htim2;
 
 /* USER CODE END PV */
@@ -78,6 +81,12 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
   /* Trace Buffer ---------------------------------------------------------*/
   tx_trace_enable(&trace_buffer, TRACEX_BUFFER_SIZE, 30);
 
+  /* Semaphore ------------------------------------------------------------*/
+  ret = tx_semaphore_create(&g_uart1_done_Semaphore, "UART1 Done Semaphore", 0);
+  if (ret != TX_SUCCESS)
+  {
+    Error_Handler();
+  }
   /* Thread_speedy -----------------------------------------------------*/
   ret =
       tx_thread_create(&thread_speedy_Uart1_ptr, "Thread SPEEDY UART1", thread_speedy_Uart1_entry,
