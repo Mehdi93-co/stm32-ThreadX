@@ -22,13 +22,13 @@
 #include <stdint.h>
 #include <stdio.h>
 
-static uint8_t  s_counter_thread_speedy_activity = 0;
-static uint8_t  s_counter_thread_slow_activity   = 0;
-static uint32_t s_counter_speedy_ticks           = 0;
-static uint32_t s_counter_slow_ticks             = 0;
+static uint32_t s_counter_speedy_ticks = 0;
+static uint32_t s_counter_slow_ticks   = 0;
 
 static uint8_t tx_ticks_speedy[50];
 static uint8_t tx_ticks_slow[50];
+
+char g_thread_message[100] = {0};
 
 /**
  * @brief  Application code for UART1
@@ -52,9 +52,14 @@ VOID thread_speedy_Uart1_entry(ULONG thread_input)
       tx_mutex_put(&g_sleep_mutex);
     }
 
-    snprintf((char *)tx_ticks_speedy, sizeof(tx_ticks_speedy), "Thread [SPEEDY]: %lu ticks\r\n",
-             (unsigned long)(tx_time_get() - s_counter_speedy_ticks));
-    App_UART1_Transmit((char *)tx_ticks_speedy, strlen((char *)tx_ticks_speedy));
+    if (tx_mutex_get(&g_message_mutex, TX_WAIT_FOREVER) == TX_SUCCESS)
+    {
+      snprintf((char *)g_thread_message, sizeof(g_thread_message), "Thread [SPEEDY]: %lu ticks\r\n",
+               (unsigned long)(tx_time_get() - s_counter_speedy_ticks));
+      tx_mutex_put(&g_message_mutex);
+    }
+
+    tx_semaphore_put(&g_uart1_send_Semaphore);
   }
 }
 
@@ -80,9 +85,32 @@ VOID thread_slow_Uart1_entry(ULONG thread_input)
     }
     tx_thread_sleep(9);
 
-    snprintf((char *)tx_ticks_slow, sizeof(tx_ticks_slow), "Thread [SLOW]: %lu ticks\r\n",
-             (unsigned long)(tx_time_get() - s_counter_slow_ticks));
-    App_UART1_Transmit((char *)tx_ticks_slow, strlen((char *)tx_ticks_slow));
+    if (tx_mutex_get(&g_message_mutex, TX_WAIT_FOREVER) == TX_SUCCESS)
+    {
+      snprintf((char *)g_thread_message, sizeof(g_thread_message), "Thread [SLOW]: %lu ticks\r\n",
+               (unsigned long)(tx_time_get() - s_counter_slow_ticks));
+      tx_mutex_put(&g_message_mutex);
+    }
+    tx_semaphore_put(&g_uart1_send_Semaphore);
+  }
+}
+
+/**
+ * @brief  Application code for UART1
+ * @retval None
+ */
+VOID thread_Uart1_entry(ULONG thread_input)
+{
+  static uint8_t s_uart1_message[100] = {0};
+  while (TRUE)
+  {
+    tx_semaphore_get(&g_uart1_send_Semaphore, TX_WAIT_FOREVER);
+    if (tx_mutex_get(&g_message_mutex, TX_WAIT_FOREVER) == TX_SUCCESS)
+    {
+      strcpy((char *)s_uart1_message, (char *)g_thread_message);
+      tx_mutex_put(&g_message_mutex);
+    }
+    App_UART1_Transmit((char *)s_uart1_message, strlen((char *)s_uart1_message));
   }
 }
 
@@ -97,15 +125,13 @@ void App_Blink_Process(void)
 
 void App_UART1_Transmit(char *data, uint16_t size)
 {
-  HAL_StatusTypeDef uart1_state = HAL_OK;
-
-  if (tx_mutex_get(&g_uart1_mutex, TX_WAIT_FOREVER) == TX_SUCCESS)
+  if (HAL_UART_Transmit_IT(&huart1, (uint8_t *)data, size) == HAL_OK)
   {
-    if (HAL_UART_Transmit_IT(&huart1, (uint8_t *)data, size) == HAL_OK)
-    {
-      tx_semaphore_get(&g_uart1_done_Semaphore, TX_WAIT_FOREVER);
-    }
-    tx_mutex_put(&g_uart1_mutex);
+    tx_semaphore_get(&g_uart1_done_Semaphore, TX_WAIT_FOREVER);
+  }
+  else
+  {
+    Error_Handler();
   }
 }
 

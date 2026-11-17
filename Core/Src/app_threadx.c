@@ -48,12 +48,15 @@ uint8_t trace_buffer[TRACEX_BUFFER_SIZE];
 
 static uint8_t   thread_speedy_Uart1_stack[THREAD_STACK_SIZE];
 static uint8_t   thread_slow_Uart1_stack[THREAD_STACK_SIZE];
+static uint8_t   thread_Uart1_stack[THREAD_STACK_SIZE];
 static TX_THREAD thread_speedy_Uart1_ptr;
 static TX_THREAD thread_slow_Uart1_ptr;
+static TX_THREAD thread_Uart1_ptr;
 
-TX_MUTEX     g_uart1_mutex;
+TX_MUTEX     g_message_mutex;
 TX_MUTEX     g_sleep_mutex;
 TX_SEMAPHORE g_uart1_done_Semaphore;
+TX_SEMAPHORE g_uart1_send_Semaphore;
 
 extern TIM_HandleTypeDef htim2;
 
@@ -88,6 +91,11 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
   {
     Error_Handler();
   }
+  ret = tx_semaphore_create(&g_uart1_send_Semaphore, "UART1 Send Semaphore", 0);
+  if (ret != TX_SUCCESS)
+  {
+    Error_Handler();
+  }
 
   /* Mutex ---------------------------------------------------------------- */
   ret = tx_mutex_create(&g_sleep_mutex, "Sleep Mutex", TX_NO_INHERIT);
@@ -95,7 +103,7 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
   {
     Error_Handler();
   }
-  ret = tx_mutex_create(&g_uart1_mutex, "UART1 Mutex", TX_NO_INHERIT);
+  ret = tx_mutex_create(&g_message_mutex, "Message Mutex", TX_NO_INHERIT);
   if (ret != TX_SUCCESS)
   {
     Error_Handler();
@@ -114,6 +122,15 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
   ret = tx_thread_create(&thread_slow_Uart1_ptr, "Thread SLOW UART1", thread_slow_Uart1_entry, 0,
                          thread_slow_Uart1_stack, THREAD_STACK_SIZE, UART_THREAD_SLOW_PRIORITY,
                          UART_THREAD_SLOW_PRIAMPTION, TX_NO_TIME_SLICE, TX_AUTO_START);
+  if (ret != TX_SUCCESS)
+  {
+    Error_Handler();
+  }
+
+  /*Thread_Uart1 -----------------------------------------------------*/
+  ret = tx_thread_create(&thread_Uart1_ptr, "Thread UART1", thread_Uart1_entry, 0,
+                         thread_Uart1_stack, THREAD_STACK_SIZE, UART_THREAD_PRIORITY,
+                         UART_THREAD_PRIAMPTION, TX_NO_TIME_SLICE, TX_AUTO_START);
   if (ret != TX_SUCCESS)
   {
     Error_Handler();

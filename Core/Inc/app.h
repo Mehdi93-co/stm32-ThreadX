@@ -32,8 +32,11 @@ extern TIM_HandleTypeDef  htim10;
 extern UART_HandleTypeDef huart1;
 
 extern TX_SEMAPHORE g_uart1_done_Semaphore;
-extern TX_MUTEX     g_uart1_mutex;
+extern TX_SEMAPHORE g_uart1_send_Semaphore;
+extern TX_MUTEX     g_message_mutex;
 extern TX_MUTEX     g_sleep_mutex;
+
+extern char g_thread_message[100];
 
 /* Threads Priamption and Priority--------------------------------------------*/
 typedef enum
@@ -48,9 +51,16 @@ typedef enum
   UART_THREAD_SLOW_PRIAMPTION = 15
 } UART_THREAD_SLOW_PRIO_t;
 
+typedef enum
+{
+  UART_THREAD_PRIORITY   = 3,
+  UART_THREAD_PRIAMPTION = 3
+} UART_THREAD_PRIO_t;
+
 /* Threads entry function ----- ----------------------------------------------*/
 VOID thread_speedy_Uart1_entry(ULONG thread_input);
 VOID thread_slow_Uart1_entry(ULONG thread_input);
+VOID thread_Uart1_entry(ULONG thread_input);
 
 /* Exported functions ------------------------------------------------------- */
 void App_UART1_Transmit(char *data, uint16_t size);
