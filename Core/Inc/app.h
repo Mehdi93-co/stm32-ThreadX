@@ -32,6 +32,8 @@ extern TIM_HandleTypeDef  htim10;
 extern UART_HandleTypeDef huart1;
 
 extern TX_SEMAPHORE g_uart1_done_Semaphore;
+extern TX_MUTEX     g_uart1_mutex;
+extern TX_MUTEX     g_sleep_mutex;
 
 /* Threads Priamption and Priority--------------------------------------------*/
 typedef enum
@@ -51,8 +53,6 @@ VOID thread_speedy_Uart1_entry(ULONG thread_input);
 VOID thread_slow_Uart1_entry(ULONG thread_input);
 
 /* Exported functions ------------------------------------------------------- */
-void App_UART1_speedy_Process(void);
-void App_UART1_slow_Process(void);
 void App_UART1_Transmit(char *data, uint16_t size);
 
 /* Callback function for EXTI interrupts ------------------------------------ */

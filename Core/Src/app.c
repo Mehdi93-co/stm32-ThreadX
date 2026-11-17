@@ -27,10 +27,8 @@ static uint8_t  s_counter_thread_slow_activity   = 0;
 static uint32_t s_counter_speedy_ticks           = 0;
 static uint32_t s_counter_slow_ticks             = 0;
 
-static const uint8_t tx_data_speedy[] = "Hello from UART1 ( speedy )\r\n";
-static const uint8_t tx_data_slow[]   = "Hello from UART1 ( slow )\r\n";
-static uint8_t       tx_ticks_speedy[50];
-static uint8_t       tx_ticks_slow[50];
+static uint8_t tx_ticks_speedy[50];
+static uint8_t tx_ticks_slow[50];
 
 /**
  * @brief  Application code for UART1
@@ -42,11 +40,19 @@ VOID thread_speedy_Uart1_entry(ULONG thread_input)
   {
     s_counter_speedy_ticks = tx_time_get();
     tx_thread_sleep(2);
+    if (tx_mutex_get(&g_sleep_mutex, TX_WAIT_FOREVER) == TX_SUCCESS)
+    {
+      tx_thread_sleep(5);
+      tx_mutex_put(&g_sleep_mutex);
+    }
     tx_thread_sleep(4);
-    tx_thread_sleep(5);
-    tx_thread_sleep(3);
+    if (tx_mutex_get(&g_sleep_mutex, TX_WAIT_FOREVER) == TX_SUCCESS)
+    {
+      tx_thread_sleep(3);
+      tx_mutex_put(&g_sleep_mutex);
+    }
 
-    snprintf((char *)tx_ticks_speedy, sizeof(tx_ticks_speedy), "Speedy: %lu ticks\r\n",
+    snprintf((char *)tx_ticks_speedy, sizeof(tx_ticks_speedy), "Thread [SPEEDY]: %lu ticks\r\n",
              (unsigned long)(tx_time_get() - s_counter_speedy_ticks));
     App_UART1_Transmit((char *)tx_ticks_speedy, strlen((char *)tx_ticks_speedy));
   }
@@ -61,12 +67,20 @@ VOID thread_slow_Uart1_entry(ULONG thread_input)
   while (TRUE)
   {
     s_counter_slow_ticks = tx_time_get();
-    tx_thread_sleep(12);
+    if (tx_mutex_get(&g_sleep_mutex, TX_WAIT_FOREVER) == TX_SUCCESS)
+    {
+      tx_thread_sleep(12);
+      tx_mutex_put(&g_sleep_mutex);
+    }
     tx_thread_sleep(8);
-    tx_thread_sleep(11);
+    if (tx_mutex_get(&g_sleep_mutex, TX_WAIT_FOREVER) == TX_SUCCESS)
+    {
+      tx_thread_sleep(11);
+      tx_mutex_put(&g_sleep_mutex);
+    }
     tx_thread_sleep(9);
 
-    snprintf((char *)tx_ticks_slow, sizeof(tx_ticks_slow), "Slow: %lu ticks\r\n",
+    snprintf((char *)tx_ticks_slow, sizeof(tx_ticks_slow), "Thread [SLOW]: %lu ticks\r\n",
              (unsigned long)(tx_time_get() - s_counter_slow_ticks));
     App_UART1_Transmit((char *)tx_ticks_slow, strlen((char *)tx_ticks_slow));
   }
@@ -85,46 +99,14 @@ void App_UART1_Transmit(char *data, uint16_t size)
 {
   HAL_StatusTypeDef uart1_state = HAL_OK;
 
-  uart1_state = HAL_UART_Transmit_IT(&huart1, (uint8_t *)data, size);
-  tx_semaphore_get(&g_uart1_done_Semaphore, TX_WAIT_FOREVER);
-  // if (uart1_state != HAL_OK)
-  //{
-  //   /* An error occurred during the transmission, handle the error */
-  //   Error_Handler();
-  // }
-}
-
-/**
- * @brief  Application code for UART1 speedy
- * @retval None
- */
-void App_UART1_speedy_Process(void)
-{
-  s_counter_thread_speedy_activity++;
-  HAL_StatusTypeDef uart1_state = HAL_OK;
-  uart1_state = HAL_UART_Transmit_IT(&huart1, tx_data_speedy, sizeof(tx_data_speedy) - 1);
-  // if (uart1_state != HAL_OK)
-  //{
-  //   /* An error occurred during the transmission, handle the error */
-  //   Error_Handler();
-  // }
-}
-
-/**
- * @brief  Application code for UART1 slow
- * @retval None
- */
-void App_UART1_slow_Process(void)
-{
-  s_counter_thread_slow_activity++;
-  HAL_StatusTypeDef uart1_state = HAL_OK;
-  uart1_state = HAL_UART_Transmit_IT(&huart1, tx_data_slow, sizeof(tx_data_slow) - 1);
-
-  // if (uart1_state != HAL_OK)
-  //{
-  //   /* An error occurred during the transmission, handle the error */
-  //   Error_Handler();
-  // }
+  if (tx_mutex_get(&g_uart1_mutex, TX_WAIT_FOREVER) == TX_SUCCESS)
+  {
+    if (HAL_UART_Transmit_IT(&huart1, (uint8_t *)data, size) == HAL_OK)
+    {
+      tx_semaphore_get(&g_uart1_done_Semaphore, TX_WAIT_FOREVER);
+    }
+    tx_mutex_put(&g_uart1_mutex);
+  }
 }
 
 /**
