@@ -22,126 +22,86 @@
 #include <stdint.h>
 #include <stdio.h>
 
-static uint32_t s_counter_speedy_ticks = 0;
-static uint32_t s_counter_slow_ticks   = 0;
+static uint32_t s_counter_producer  = 0;
+static uint32_t s_counter_consumer1 = 0;
+static uint32_t s_counter_consumer2 = 0;
+static uint32_t s_counter_consumer3 = 0;
 
 /**
- * @brief  Application code for UART1
+ * @brief  Application code for producer thread
  * @retval None
  */
-VOID thread_speedy_Uart1_entry(ULONG thread_input)
+VOID thread_producer_entry(ULONG thread_input)
 {
-  static thread_data_t s_thread_data;
   while (TRUE)
   {
-    s_counter_speedy_ticks = tx_time_get();
-    tx_thread_sleep(2);
-    if (tx_mutex_get(&g_sleep_mutex, TX_WAIT_FOREVER) == TX_SUCCESS)
+    s_counter_producer++;
+    for (uint32_t i = 0; i < MESSAGE_NUM; i++)
     {
-      tx_thread_sleep(5);
-      tx_mutex_put(&g_sleep_mutex);
+      thread_data_t data;
+      data.thread_id = i;
+      data.counter   = s_counter_producer;
+
+      /* Send the data to the queue */
+      UINT status = tx_queue_send(&g_thread_queue_consumer1, &data, TX_WAIT_FOREVER);
+      if (status != TX_SUCCESS)
+      {
+        Error_Handler();
+      }
+      status = tx_queue_send(&g_thread_queue_consumer2, &data, TX_WAIT_FOREVER);
+      if (status != TX_SUCCESS)
+      {
+        Error_Handler();
+      }
+      status = tx_queue_send(&g_thread_queue_consumer3, &data, TX_WAIT_FOREVER);
+      if (status != TX_SUCCESS)
+      {
+        Error_Handler();
+      }
     }
-    tx_thread_sleep(4);
-    if (tx_mutex_get(&g_sleep_mutex, TX_WAIT_FOREVER) == TX_SUCCESS)
-    {
-      tx_thread_sleep(3);
-      tx_mutex_put(&g_sleep_mutex);
-    }
-    s_thread_data.thread_id = THREAD_ID_SPEEDY;
-    s_thread_data.ticks     = tx_time_get() - s_counter_speedy_ticks;
-    tx_queue_send(&g_thread_queue, &s_thread_data, TX_WAIT_FOREVER);
+    tx_thread_relinquish();
+    tx_trace_user_event_insert(TRACE_EVENT_PRODUCER_CYCLE, s_counter_producer, 0, 0, 0);
   }
 }
 
 /**
- * @brief  Application code for UART1
+ * @brief  Application code for consumer thread 1
  * @retval None
  */
-VOID thread_slow_Uart1_entry(ULONG thread_input)
+VOID thread_consumer1_entry(ULONG thread_input)
 {
-  static thread_data_t s_thread_data;
+  thread_data_t s_thread_data;
   while (TRUE)
   {
-    s_counter_slow_ticks = tx_time_get();
-    if (tx_mutex_get(&g_sleep_mutex, TX_WAIT_FOREVER) == TX_SUCCESS)
-    {
-      tx_thread_sleep(12);
-      tx_mutex_put(&g_sleep_mutex);
-    }
-    tx_thread_sleep(8);
-    if (tx_mutex_get(&g_sleep_mutex, TX_WAIT_FOREVER) == TX_SUCCESS)
-    {
-      tx_thread_sleep(11);
-      tx_mutex_put(&g_sleep_mutex);
-    }
-    tx_thread_sleep(9);
-
-    s_thread_data.thread_id = THREAD_ID_SLOW;
-    s_thread_data.ticks     = tx_time_get() - s_counter_slow_ticks;
-    tx_queue_send(&g_thread_queue, &s_thread_data, TX_WAIT_FOREVER);
+    s_counter_consumer1++;
+    tx_queue_receive(&g_thread_queue_consumer1, &s_thread_data, TX_WAIT_FOREVER);
   }
 }
 
 /**
- * @brief  Application code for UART1
+ * @brief  Application code for consumer thread 1
  * @retval None
  */
-VOID thread_Uart1_entry(ULONG thread_input)
+VOID thread_consumer2_entry(ULONG thread_input)
 {
-  static char s_uart1_message[100];
+  thread_data_t s_thread_data;
   while (TRUE)
   {
-    static thread_data_t s_thread_data;
-    tx_queue_receive(&g_thread_queue, &s_thread_data, TX_WAIT_FOREVER);
-    switch (s_thread_data.thread_id)
-    {
-      case THREAD_ID_SPEEDY:
-        snprintf(s_uart1_message, sizeof(s_uart1_message), "Thread SPEEDY[ Ticks: %lu]\r\n",
-                 (unsigned long)s_thread_data.ticks);
-        break;
-      case THREAD_ID_SLOW:
-        snprintf(s_uart1_message, sizeof(s_uart1_message), "Thread SLOW[ Ticks: %lu]\r\n",
-                 (unsigned long)s_thread_data.ticks);
-        break;
-      default:
-        snprintf(s_uart1_message, sizeof(s_uart1_message), "Unknown Thread ID[ %lu Ticks: %lu]\r\n",
-                 (unsigned long)s_thread_data.thread_id, (unsigned long)s_thread_data.ticks);
-        break;
-    }
-    App_UART1_Transmit((char *)s_uart1_message, strlen((char *)s_uart1_message));
+    s_counter_consumer2++;
+    tx_queue_receive(&g_thread_queue_consumer2, &s_thread_data, TX_WAIT_FOREVER);
   }
 }
 
 /**
- * @brief  Application code for LD1 and BTN
+ * @brief  Application code for consumer thread 1
  * @retval None
  */
-void App_Blink_Process(void)
+VOID thread_consumer3_entry(ULONG thread_input)
 {
-  HAL_GPIO_TogglePin(LED_LD1_GPIO_Port, LED_LD1_Pin);
-}
-
-void App_UART1_Transmit(char *data, uint16_t size)
-{
-  if (HAL_UART_Transmit_IT(&huart1, (uint8_t *)data, size) == HAL_OK)
+  thread_data_t s_thread_data;
+  while (TRUE)
   {
-    tx_semaphore_get(&g_uart1_done_Semaphore, TX_WAIT_FOREVER);
-  }
-  else
-  {
-    Error_Handler();
-  }
-}
-
-/**
- * @brief  Callback function for UART interrupts
- * @param  huart: pointer to UART handle
- * @retval None
- */
-void App_UART1_TransmitCpltCallback(UART_HandleTypeDef *huart)
-{
-  if (huart->Instance == USART1)
-  {
-    tx_semaphore_put(&g_uart1_done_Semaphore);
+    s_counter_consumer3++;
+    tx_queue_receive(&g_thread_queue_consumer3, &s_thread_data, TX_WAIT_FOREVER);
   }
 }

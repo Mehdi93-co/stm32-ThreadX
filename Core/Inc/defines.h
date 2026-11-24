@@ -40,8 +40,12 @@ extern "C"
 #define UART1_TX_PERIODIC_INTERRUPT_COUNT 10
 
 /* Thread Define -------------------------------------------------------------*/
-#define THREAD_STACK_SIZE  1024
-#define TRACEX_BUFFER_SIZE (64 * 1024) /* 64 KB TraceX buffer size */
+#define THREAD_STACK_SIZE          1024
+#define TRACEX_BUFFER_SIZE         (64 * 1024)                     /* 64 KB TraceX buffer size */
+#define TRACE_EVENT_PRODUCER_CYCLE (TX_TRACE_USER_EVENT_START + 0) /* 4096 */
+#define TRACE_EVENT_CONSUMER_A     (TX_TRACE_USER_EVENT_START + 1) /* 4097 */
+#define TRACE_EVENT_CONSUMER_B     (TX_TRACE_USER_EVENT_START + 2)
+#define TRACE_EVENT_CONSUMER_C     (TX_TRACE_USER_EVENT_START + 3)
 
 /* Exported types ------------------------------------------------------------*/
 /* USER BUTTON State */

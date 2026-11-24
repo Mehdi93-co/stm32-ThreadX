@@ -46,19 +46,22 @@
 /* USER CODE BEGIN PV */
 uint8_t trace_buffer[TRACEX_BUFFER_SIZE];
 
-static uint8_t   thread_speedy_Uart1_stack[THREAD_STACK_SIZE];
-static uint8_t   thread_slow_Uart1_stack[THREAD_STACK_SIZE];
-static uint8_t   thread_Uart1_stack[THREAD_STACK_SIZE];
-static TX_THREAD thread_speedy_Uart1_ptr;
-static TX_THREAD thread_slow_Uart1_ptr;
-static TX_THREAD thread_Uart1_ptr;
+static uint8_t   thread_producer_stack[THREAD_STACK_SIZE];
+static uint8_t   thread_consumer1_stack[THREAD_STACK_SIZE];
+static uint8_t   thread_consumer2_stack[THREAD_STACK_SIZE];
+static uint8_t   thread_consumer3_stack[THREAD_STACK_SIZE];
+static TX_THREAD thread_producer_ptr;
+static TX_THREAD thread_consumer1_ptr;
+static TX_THREAD thread_consumer2_ptr;
+static TX_THREAD thread_consumer3_ptr;
 
-static thread_data_t g_thread_queue_data[UART_QUEUE_DEPTH];
+static thread_data_t g_thread_queue_data_consumer1[CONSUMER1_QUEUE_DEPTH];
+static thread_data_t g_thread_queue_data_consumer2[CONSUMER2_QUEUE_DEPTH];
+static thread_data_t g_thread_queue_data_consumer3[CONSUMER3_QUEUE_DEPTH];
 
-TX_MUTEX     g_sleep_mutex;
-TX_SEMAPHORE g_uart1_done_Semaphore;
-
-TX_QUEUE g_thread_queue;
+TX_QUEUE g_thread_queue_consumer1;
+TX_QUEUE g_thread_queue_consumer2;
+TX_QUEUE g_thread_queue_consumer3;
 
 extern TIM_HandleTypeDef htim2;
 
@@ -87,55 +90,58 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
   /* Trace Buffer ---------------------------------------------------------*/
   tx_trace_enable(&trace_buffer, TRACEX_BUFFER_SIZE, 30);
 
-  /* Semaphore ------------------------------------------------------------*/
-  ret = tx_semaphore_create(&g_uart1_done_Semaphore, "UART1 Done Semaphore", 0);
-  if (ret != TX_SUCCESS)
-  {
-    Error_Handler();
-  }
-
   /* Queue ------------------------------------------------------------*/
-  ret = tx_queue_create(&g_thread_queue, "Thread Queue", UART_QUEUE_DEPTH, g_thread_queue_data,
-                        sizeof(g_thread_queue_data));
+
+  ret = tx_queue_create(&g_thread_queue_consumer1, "Thread Queue Consumer1", THREAD_DATA_SIZE,
+                        g_thread_queue_data_consumer1, sizeof(g_thread_queue_data_consumer1));
   if (ret != TX_SUCCESS)
   {
     Error_Handler();
   }
 
-  /* Mutex ---------------------------------------------------------------- */
-  ret = tx_mutex_create(&g_sleep_mutex, "Sleep Mutex", TX_NO_INHERIT);
-  if (ret != TX_SUCCESS)
-  {
-    Error_Handler();
-  }
-  /* Thread_speedy -----------------------------------------------------*/
-  ret =
-      tx_thread_create(&thread_speedy_Uart1_ptr, "Thread SPEEDY UART1", thread_speedy_Uart1_entry,
-                       0, thread_speedy_Uart1_stack, THREAD_STACK_SIZE, UART_THREAD_SPEEDY_PRIORITY,
-                       UART_THREAD_SPEEDY_PRIAMPTION, TX_NO_TIME_SLICE, TX_AUTO_START);
+  ret = tx_queue_create(&g_thread_queue_consumer2, "Thread Queue Consumer2", THREAD_DATA_SIZE,
+                        g_thread_queue_data_consumer2, sizeof(g_thread_queue_data_consumer2));
   if (ret != TX_SUCCESS)
   {
     Error_Handler();
   }
 
-  /* Thread_slow -----------------------------------------------------*/
-  ret = tx_thread_create(&thread_slow_Uart1_ptr, "Thread SLOW UART1", thread_slow_Uart1_entry, 0,
-                         thread_slow_Uart1_stack, THREAD_STACK_SIZE, UART_THREAD_SLOW_PRIORITY,
-                         UART_THREAD_SLOW_PRIAMPTION, TX_NO_TIME_SLICE, TX_AUTO_START);
+  ret = tx_queue_create(&g_thread_queue_consumer3, "Thread Queue Consumer3", THREAD_DATA_SIZE,
+                        g_thread_queue_data_consumer3, sizeof(g_thread_queue_data_consumer3));
   if (ret != TX_SUCCESS)
   {
     Error_Handler();
   }
 
-  /*Thread_Uart1 -----------------------------------------------------*/
-  ret = tx_thread_create(&thread_Uart1_ptr, "Thread UART1", thread_Uart1_entry, 0,
-                         thread_Uart1_stack, THREAD_STACK_SIZE, UART_THREAD_PRIORITY,
-                         UART_THREAD_PRIAMPTION, TX_NO_TIME_SLICE, TX_AUTO_START);
+  /* Threads -----------------------------------------------------------*/
+  ret = tx_thread_create(&thread_producer_ptr, "Thread Producer", thread_producer_entry, 0,
+                         thread_producer_stack, THREAD_STACK_SIZE, PRODUCER_THREAD_PRIORITY,
+                         PRODUCER_THREAD_PRIAMPTION, TX_NO_TIME_SLICE, TX_AUTO_START);
   if (ret != TX_SUCCESS)
   {
     Error_Handler();
   }
-
+  ret = tx_thread_create(&thread_consumer1_ptr, "Thread Consumer1", thread_consumer1_entry, 0,
+                         thread_consumer1_stack, THREAD_STACK_SIZE, CONSUMER1_THREAD_PRIORITY,
+                         CONSUMER1_THREAD_PRIAMPTION, TX_NO_TIME_SLICE, TX_AUTO_START);
+  if (ret != TX_SUCCESS)
+  {
+    Error_Handler();
+  }
+  ret = tx_thread_create(&thread_consumer2_ptr, "Thread Consumer2", thread_consumer2_entry, 0,
+                         thread_consumer2_stack, THREAD_STACK_SIZE, CONSUMER2_THREAD_PRIORITY,
+                         CONSUMER2_THREAD_PRIAMPTION, TX_NO_TIME_SLICE, TX_AUTO_START);
+  if (ret != TX_SUCCESS)
+  {
+    Error_Handler();
+  }
+  ret = tx_thread_create(&thread_consumer3_ptr, "Thread Consumer3", thread_consumer3_entry, 0,
+                         thread_consumer3_stack, THREAD_STACK_SIZE, CONSUMER3_THREAD_PRIORITY,
+                         CONSUMER3_THREAD_PRIAMPTION, TX_NO_TIME_SLICE, TX_AUTO_START);
+  if (ret != TX_SUCCESS)
+  {
+    Error_Handler();
+  }
   /* USER CODE END App_ThreadX_Init */
 
   return ret;

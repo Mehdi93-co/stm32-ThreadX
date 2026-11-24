@@ -27,33 +27,47 @@ extern "C"
 #include "defines.h"
 #include <stdint.h>
 
+#define MESSAGE_NUM 3
+
 extern TIM_HandleTypeDef  htim7;
 extern TIM_HandleTypeDef  htim10;
 extern UART_HandleTypeDef huart1;
 
-extern TX_SEMAPHORE g_uart1_done_Semaphore;
-extern TX_MUTEX     g_message_mutex;
-extern TX_MUTEX     g_sleep_mutex;
-extern TX_QUEUE     g_thread_queue;
+extern TX_QUEUE g_thread_queue_consumer1;
+extern TX_QUEUE g_thread_queue_consumer2;
+extern TX_QUEUE g_thread_queue_consumer3;
 
 /* Threads Priamption and Priority--------------------------------------------*/
 typedef enum
 {
-  UART_THREAD_SPEEDY_PRIORITY   = 5,
-  UART_THREAD_SPEEDY_PRIAMPTION = 5
-} UART_THREAD_SPEEDY_PRIO_t;
+  CONSUMER1_QUEUE_DEPTH = 3,
+  CONSUMER2_QUEUE_DEPTH = 3,
+  CONSUMER3_QUEUE_DEPTH = 3
+} CONSUMER1_QUEUE_DEPTH_t;
 
 typedef enum
 {
-  UART_THREAD_SLOW_PRIORITY   = 15,
-  UART_THREAD_SLOW_PRIAMPTION = 15
-} UART_THREAD_SLOW_PRIO_t;
+  PRODUCER_THREAD_PRIORITY   = 4,
+  PRODUCER_THREAD_PRIAMPTION = 1
+} PRODUCER_THREAD_PRIO_t;
 
 typedef enum
 {
-  UART_THREAD_PRIORITY   = 16,
-  UART_THREAD_PRIAMPTION = 16
-} UART_THREAD_PRIO_t;
+  CONSUMER1_THREAD_PRIORITY   = 1,
+  CONSUMER1_THREAD_PRIAMPTION = 1
+} CONSUMER1_THREAD_PRIO_t;
+
+typedef enum
+{
+  CONSUMER2_THREAD_PRIORITY   = 2,
+  CONSUMER2_THREAD_PRIAMPTION = 2
+} CONSUMER2_THREAD_PRIO_t;
+
+typedef enum
+{
+  CONSUMER3_THREAD_PRIORITY   = 3,
+  CONSUMER3_THREAD_PRIAMPTION = 3
+} CONSUMER3_THREAD_PRIO_t;
 
 typedef enum
 {
@@ -64,23 +78,25 @@ typedef enum
 typedef struct
 {
   uint32_t thread_id;
-  uint32_t ticks;
+  uint32_t counter;
 } thread_data_t;
 
 #define THREAD_DATA_SIZE (sizeof(thread_data_t) / sizeof(ULONG))
 #define UART_QUEUE_DEPTH 5
 
 /* Threads entry function ----- ----------------------------------------------*/
-VOID thread_speedy_Uart1_entry(ULONG thread_input);
-VOID thread_slow_Uart1_entry(ULONG thread_input);
 VOID thread_Uart1_entry(ULONG thread_input);
 
+/* threads entry functions for priority management */
+VOID thread_producer_entry(ULONG thread_input);
+VOID thread_consumer1_entry(ULONG thread_input);
+VOID thread_consumer2_entry(ULONG thread_input);
+VOID thread_consumer3_entry(ULONG thread_input);
+
 /* Exported functions ------------------------------------------------------- */
-void App_UART1_Transmit(char *data, uint16_t size);
 
 /* Callback function for EXTI interrupts ------------------------------------ */
 void App_UART1_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
-void App_UART1_TransmitCpltCallback(UART_HandleTypeDef *huart);
 #ifdef __cplusplus
 }
 #endif /* defined(__cplusplus) */

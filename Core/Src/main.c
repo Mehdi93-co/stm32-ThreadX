@@ -90,8 +90,7 @@ int main(void)
 
   /* MCU Configuration--------------------------------------------------------*/
 
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */ HAL_Init();
 
   /* USER CODE BEGIN Init */
 
@@ -1083,7 +1082,6 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
-  App_UART1_TransmitCpltCallback(huart);
 }
 /* USER CODE END 4 */
 
