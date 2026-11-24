@@ -30,6 +30,9 @@ extern "C"
 extern TIM_HandleTypeDef  htim7;
 extern TIM_HandleTypeDef  htim10;
 extern UART_HandleTypeDef huart1;
+
+extern TX_SEMAPHORE g_ld1_Semaphore;
+
 typedef enum
 {
   RESCHEDULE_TICKS = 10,

@@ -14,3 +14,6 @@ I/R	Internal Resume: Der Thread wird wieder lauffähig.	put weckt einen wartende
 S/C	Semaphore Create	tx_semaphore_create()
 T/C	Thread Create	tx_thread_create()
 R (grün)	Running: Ab hier läuft dieser Kontext (Kontextwechsel).	Scheduler
+
+git status                                   # alles committet?
+git switch feat/application-timer-4.2        # auf den 4.2-Branch wechseln

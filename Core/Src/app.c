@@ -24,15 +24,21 @@
 
 void ld1_thread_entry(ULONG thread_input)
 {
+  UINT ret = TX_SUCCESS;
   while (1)
   {
-    tx_thread_sleep(LED_BLINK_DELAY);
+    ret = tx_semaphore_get(&g_ld1_Semaphore, TX_WAIT_FOREVER);
+    if (ret != TX_SUCCESS)
+    {
+      tx_thread_sleep(LED_BLINK_DELAY);
+    }
+    HAL_GPIO_TogglePin(LED_LD1_GPIO_Port, LED_LD1_Pin);
   }
 }
 
 void ld1_timer_callback(ULONG timer_input)
 {
-  HAL_GPIO_TogglePin(LED_LD1_GPIO_Port, LED_LD1_Pin);
+  tx_semaphore_put(&g_ld1_Semaphore);
 }
 
 /**

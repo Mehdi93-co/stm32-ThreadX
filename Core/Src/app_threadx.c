@@ -27,6 +27,7 @@
 #include "app.h"
 #include "stm32f746xx.h"
 #include "stm32f7xx_hal_tim.h"
+#include "tx_api.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -51,6 +52,8 @@ static TX_THREAD ld1_thread_ptr;
 
 TX_TIMER g_ld1_timer;
 
+TX_SEMAPHORE g_ld1_Semaphore;
+
 extern TIM_HandleTypeDef htim2;
 
 /* USER CODE END PV */
@@ -74,9 +77,15 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
   /* USER CODE END App_ThreadX_MEM_POOL */
 
   /* USER CODE BEGIN App_ThreadX_Init */
-
   /* Trace Buffer ---------------------------------------------------------*/
   tx_trace_enable(&trace_buffer, TRACEX_BUFFER_SIZE, 30);
+
+  /* Create the semaphore --------------------------------------------------*/
+  ret = tx_semaphore_create(&g_ld1_Semaphore, "LD1 Semaphore", 0);
+  if (ret != TX_SUCCESS)
+  {
+    Error_Handler();
+  }
 
   /* Create the timer -----------------------------------------------------*/
   ret = tx_timer_create(&g_ld1_timer, "LD1 Timer", ld1_timer_callback, 0, INITIAL_TICKS,
