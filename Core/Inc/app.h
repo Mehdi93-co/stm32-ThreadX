@@ -30,52 +30,24 @@ extern "C"
 extern TIM_HandleTypeDef  htim7;
 extern TIM_HandleTypeDef  htim10;
 extern UART_HandleTypeDef huart1;
-
-extern TX_SEMAPHORE g_uart1_done_Semaphore;
-extern TX_MUTEX     g_message_mutex;
-extern TX_MUTEX     g_sleep_mutex;
-extern TX_QUEUE     g_thread_queue;
-extern TX_BYTE_POOL g_msg_pool;
-
 typedef enum
 {
-  THREAD1_SLEEP_TICKS = 80,
-  THREAD2_SLEEP_TICKS = 120,
-} THREAD_SLEEP_TICKS_t;
+  RESCHEDULE_TICKS = 10,
+  INITIAL_TICKS    = 1
+} LD1_TIMER_TICKS_t;
 
 /* Threads Priamption and Priority--------------------------------------------*/
 typedef enum
 {
-  UART_THREAD1_PRIORITY   = 5,
-  UART_THREAD1_PRIAMPTION = 5
-} UART_THREAD1_PRIO_t;
-
-typedef enum
-{
-  UART_THREAD2_PRIORITY   = 15,
-  UART_THREAD2_PRIAMPTION = 15
-} UART_THREAD2_PRIO_t;
-
-typedef enum
-{
-  UART_THREAD_PRIORITY   = 16,
-  UART_THREAD_PRIAMPTION = 16
-} UART_THREAD_PRIO_t;
-
-typedef enum
-{
-  THREAD1_ID = 1,
-  THREAD2_ID = 2,
-} THREAD_ID_t;
+  LD1_THREAD1_PRIORITY   = 5,
+  LD1_THREAD1_PRIAMPTION = 5
+} LD1_THREAD1_PRIO_t;
 
 /* Threads entry function ----- ----------------------------------------------*/
-VOID thread_1_entry(ULONG thread_input);
-VOID thread_2_entry(ULONG thread_input);
-VOID thread_Uart1_entry(ULONG thread_input);
+void ld1_thread_entry(ULONG thread_input);
 
 /* Exported functions ------------------------------------------------------- */
-void App_UART1_Transmit(char *data, uint16_t size);
-
+void ld1_timer_callback(ULONG timer_input);
 /* Callback function for EXTI interrupts ------------------------------------ */
 void App_UART1_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
 void App_UART1_TransmitCpltCallback(UART_HandleTypeDef *huart);

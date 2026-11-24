@@ -46,19 +46,10 @@
 /* USER CODE BEGIN PV */
 uint8_t trace_buffer[TRACEX_BUFFER_SIZE];
 
-static uint8_t   thread_1_stack[THREAD_STACK_SIZE];
-static uint8_t   thread_2_stack[THREAD_STACK_SIZE];
-static uint8_t   thread_Uart1_stack[THREAD_STACK_SIZE];
-static TX_THREAD thread_1_ptr;
-static TX_THREAD thread_2_ptr;
-static TX_THREAD thread_Uart1_ptr;
+static uint8_t   ld1_thread_stack[THREAD_STACK_SIZE];
+static TX_THREAD ld1_thread_ptr;
 
-TX_SEMAPHORE g_uart1_done_Semaphore;
-
-TX_QUEUE     g_thread_queue;
-ULONG        g_queue_msg[MSG_MAX_IN_FLIGHT];
-TX_BYTE_POOL g_msg_pool;
-static char  g_uart1_msg[MSG_POOL_SIZE];
+TX_TIMER g_ld1_timer;
 
 extern TIM_HandleTypeDef htim2;
 
@@ -83,56 +74,25 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
   /* USER CODE END App_ThreadX_MEM_POOL */
 
   /* USER CODE BEGIN App_ThreadX_Init */
-  /* Create a byte memory pool from which to allocate the thread stacks.  */
-  ret = tx_byte_pool_create(&g_msg_pool, "App_ThreadX_Memory", g_uart1_msg, MSG_POOL_SIZE);
-  if (ret != TX_SUCCESS)
-  {
-    Error_Handler();
-  }
+
   /* Trace Buffer ---------------------------------------------------------*/
   tx_trace_enable(&trace_buffer, TRACEX_BUFFER_SIZE, 30);
 
-  /* Semaphore ------------------------------------------------------------*/
-  ret = tx_semaphore_create(&g_uart1_done_Semaphore, "UART1 Done Semaphore", 0);
+  /* Create the timer -----------------------------------------------------*/
+  ret = tx_timer_create(&g_ld1_timer, "LD1 Timer", ld1_timer_callback, 0, INITIAL_TICKS,
+                        RESCHEDULE_TICKS, TX_AUTO_ACTIVATE);
   if (ret != TX_SUCCESS)
   {
     Error_Handler();
   }
-
-  /* Queue ------------------------------------------------------------*/
-  ret = tx_queue_create(&g_thread_queue, "Thread Queue", 1, g_queue_msg, sizeof(g_queue_msg));
-  if (ret != TX_SUCCESS)
-  {
-    Error_Handler();
-  }
-
-  /* thread 1 --------------------------------------------------------*/
-  ret = tx_thread_create(&thread_1_ptr, "Thread 1", thread_1_entry, 0, thread_1_stack,
-                         THREAD_STACK_SIZE, UART_THREAD1_PRIORITY, UART_THREAD1_PRIAMPTION,
+  /* Create the threads ---------------------------------------------------*/
+  ret = tx_thread_create(&ld1_thread_ptr, "LD1 Thread", ld1_thread_entry, 0, ld1_thread_stack,
+                         THREAD_STACK_SIZE, LD1_THREAD1_PRIORITY, LD1_THREAD1_PRIAMPTION,
                          TX_NO_TIME_SLICE, TX_AUTO_START);
   if (ret != TX_SUCCESS)
   {
     Error_Handler();
   }
-
-  /* thread 2 --------------------------------------------------------*/
-  ret = tx_thread_create(&thread_2_ptr, "Thread 2", thread_2_entry, 0, thread_2_stack,
-                         THREAD_STACK_SIZE, UART_THREAD2_PRIORITY, UART_THREAD2_PRIAMPTION,
-                         TX_NO_TIME_SLICE, TX_AUTO_START);
-  if (ret != TX_SUCCESS)
-  {
-    Error_Handler();
-  }
-
-  /*Thread_Uart1 -----------------------------------------------------*/
-  ret = tx_thread_create(&thread_Uart1_ptr, "Thread UART1", thread_Uart1_entry, 0,
-                         thread_Uart1_stack, THREAD_STACK_SIZE, UART_THREAD_PRIORITY,
-                         UART_THREAD_PRIAMPTION, TX_NO_TIME_SLICE, TX_AUTO_START);
-  if (ret != TX_SUCCESS)
-  {
-    Error_Handler();
-  }
-
   /* USER CODE END App_ThreadX_Init */
 
   return ret;
