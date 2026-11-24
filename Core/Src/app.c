@@ -46,7 +46,12 @@ VOID thread_1_entry(ULONG thread_input)
              (unsigned long)s_counter_thread1, (unsigned long)tx_time_get());
 
     ;
-    tx_queue_send(&g_thread_queue, &s_thread1_msg, TX_WAIT_FOREVER);
+    tx_queue_send(&g_thread1_queue, &s_thread1_msg, TX_WAIT_FOREVER);
+    s_status = tx_event_flags_set(&g_uart1_event_group, THREAD1_FLAGS, TX_OR);
+    if (s_status != TX_SUCCESS)
+    {
+      Error_Handler();
+    }
   }
 }
 
@@ -74,7 +79,12 @@ VOID thread_2_entry(ULONG thread_input)
              (unsigned long)s_counter_thread2, (unsigned long)tx_time_get());
 
     ;
-    tx_queue_send(&g_thread_queue, &s_thread2_msg, TX_WAIT_FOREVER);
+    tx_queue_send(&g_thread2_queue, &s_thread2_msg, TX_WAIT_FOREVER);
+    s_status = tx_event_flags_set(&g_uart1_event_group, THREAD2_FLAGS, TX_OR);
+    if (s_status != TX_SUCCESS)
+    {
+      Error_Handler();
+    }
   }
 }
 
@@ -84,18 +94,22 @@ VOID thread_2_entry(ULONG thread_input)
  */
 VOID thread_Uart1_entry(ULONG thread_input)
 {
-  char *s_uart1_message;
-  UINT  status;
+  static ULONG s_actual_event_flags;
   while (TRUE)
   {
-    status = tx_queue_receive(&g_thread_queue, &s_uart1_message, TX_WAIT_FOREVER);
-    if (status != TX_SUCCESS)
+    if (tx_event_flags_get(&g_uart1_event_group, THREADS_FLAG_MASK, TX_OR_CLEAR,
+                           &s_actual_event_flags, TX_WAIT_FOREVER) != TX_SUCCESS)
     {
       Error_Handler();
     }
-
-    App_UART1_Transmit((char *)s_uart1_message, strlen((char *)s_uart1_message));
-    tx_byte_release(s_uart1_message);
+    if (s_actual_event_flags & THREAD1_FLAGS)
+    {
+      uart_drain_queue(&g_thread1_queue);
+    }
+    if (s_actual_event_flags & THREAD2_FLAGS)
+    {
+      uart_drain_queue(&g_thread2_queue);
+    }
   }
 }
 
@@ -130,5 +144,16 @@ void App_UART1_TransmitCpltCallback(UART_HandleTypeDef *huart)
   if (huart->Instance == USART1)
   {
     tx_semaphore_put(&g_uart1_done_Semaphore);
+  }
+}
+
+void uart_drain_queue(TX_QUEUE *queue)
+{
+  char *s_uart1_message;
+  {
+    while (tx_queue_receive(queue, &s_uart1_message, TX_NO_WAIT) == TX_SUCCESS)
+      ;
+    App_UART1_Transmit((char *)s_uart1_message, strlen((char *)s_uart1_message));
+    tx_byte_release(s_uart1_message);
   }
 }

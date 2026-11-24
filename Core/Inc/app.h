@@ -34,8 +34,17 @@ extern UART_HandleTypeDef huart1;
 extern TX_SEMAPHORE g_uart1_done_Semaphore;
 extern TX_MUTEX     g_message_mutex;
 extern TX_MUTEX     g_sleep_mutex;
-extern TX_QUEUE     g_thread_queue;
+extern TX_QUEUE     g_thread1_queue;
+extern TX_QUEUE     g_thread2_queue;
 extern TX_BYTE_POOL g_msg_pool;
+
+extern TX_EVENT_FLAGS_GROUP g_uart1_event_group;
+typedef enum
+{
+  THREAD1_FLAGS     = 0x01,
+  THREAD2_FLAGS     = 0x02,
+  THREADS_FLAG_MASK = 0x03
+} THREAD_FLAGS_t;
 
 typedef enum
 {
@@ -75,6 +84,7 @@ VOID thread_Uart1_entry(ULONG thread_input);
 
 /* Exported functions ------------------------------------------------------- */
 void App_UART1_Transmit(char *data, uint16_t size);
+void uart_drain_queue(TX_QUEUE *queue);
 
 /* Callback function for EXTI interrupts ------------------------------------ */
 void App_UART1_PeriodElapsedCallback(TIM_HandleTypeDef *htim);

@@ -55,10 +55,14 @@ static TX_THREAD thread_Uart1_ptr;
 
 TX_SEMAPHORE g_uart1_done_Semaphore;
 
-TX_QUEUE     g_thread_queue;
-ULONG        g_queue_msg[MSG_MAX_IN_FLIGHT];
+TX_QUEUE     g_thread1_queue;
+TX_QUEUE     g_thread2_queue;
+ULONG        g_queue1_msg[MSG_MAX_IN_FLIGHT];
+ULONG        g_queue2_msg[MSG_MAX_IN_FLIGHT];
 TX_BYTE_POOL g_msg_pool;
 static char  g_uart1_msg[MSG_POOL_SIZE];
+
+TX_EVENT_FLAGS_GROUP g_uart1_event_group;
 
 extern TIM_HandleTypeDef htim2;
 
@@ -92,6 +96,13 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
   /* Trace Buffer ---------------------------------------------------------*/
   tx_trace_enable(&trace_buffer, TRACEX_BUFFER_SIZE, 30);
 
+  /* event flags group ----------------------------------------------------*/
+  ret = tx_event_flags_create(&g_uart1_event_group, "UART1 Event Group");
+  if (ret != TX_SUCCESS)
+  {
+    Error_Handler();
+  }
+
   /* Semaphore ------------------------------------------------------------*/
   ret = tx_semaphore_create(&g_uart1_done_Semaphore, "UART1 Done Semaphore", 0);
   if (ret != TX_SUCCESS)
@@ -100,7 +111,13 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
   }
 
   /* Queue ------------------------------------------------------------*/
-  ret = tx_queue_create(&g_thread_queue, "Thread Queue", 1, g_queue_msg, sizeof(g_queue_msg));
+  ret = tx_queue_create(&g_thread1_queue, "Thread 1 Queue", 1, g_queue1_msg, sizeof(g_queue1_msg));
+  if (ret != TX_SUCCESS)
+  {
+    Error_Handler();
+  }
+
+  ret = tx_queue_create(&g_thread2_queue, "Thread 2 Queue", 1, g_queue2_msg, sizeof(g_queue2_msg));
   if (ret != TX_SUCCESS)
   {
     Error_Handler();
