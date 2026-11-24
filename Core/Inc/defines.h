@@ -43,6 +43,12 @@ extern "C"
 #define THREAD_STACK_SIZE  1024
 #define TRACEX_BUFFER_SIZE (64 * 1024) /* 64 KB TraceX buffer size */
 
+/* UART Queue Define ---------------------------------------------------------*/
+#define THREAD_DATA_SIZE  (sizeof(thread_data_t) / sizeof(ULONG))
+#define MSG_BLOCK_SIZE    80
+#define MSG_MAX_IN_FLIGHT 4
+#define MSG_POOL_SIZE     (MSG_MAX_IN_FLIGHT * (MSG_BLOCK_SIZE + 16))
+
 /* Exported types ------------------------------------------------------------*/
 /* USER BUTTON State */
 typedef enum
